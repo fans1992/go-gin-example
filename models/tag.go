@@ -1,5 +1,10 @@
 package models
 
+import (
+	"github.com/jinzhu/gorm"
+	"time"
+)
+
 type Tag struct {
 	Model
 
@@ -20,3 +25,39 @@ func GetTagTotal(maps interface{}) (count int) {
 
 	return
 }
+
+func ExistTagByName(name string) bool {
+	var tag Tag
+	db.Select("id").Where("name=?", name).First(&tag)
+
+	if tag.ID > 0 {
+		return true
+	}
+
+	return false
+}
+
+func AddTag(name string, state int, createdBy string) bool {
+	tag := Tag{
+		Name:      name,
+		CreatedBy: createdBy,
+		State:     state,
+	}
+	db.Create(&tag)
+
+	return true
+}
+
+func (tag *Tag) BeforeCreate(scope *gorm.Scope) error {
+	scope.SetColumn("CreatedOn", time.Now().Unix())
+
+	return nil
+}
+
+func (tag *Tag) BeforeUpdate(scope *gorm.Scope) error {
+	scope.SetColumn("ModifiedOn", time.Now().Unix())
+
+	return nil
+}
+
+
